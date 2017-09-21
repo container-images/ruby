@@ -1,0 +1,113 @@
+.TH "RUBY " "1" " Container Image Pages" "Jan Koscielniak" "September 20, 2017" 
+.nh
+.ad l
+
+
+.SH NAME
+.PP
+Ruby \- A dynamic, open source programming language with a focus on simplicity and productivity.
+
+
+.SH DESCRIPTION
+.PP
+This is a Ruby 2.4 s2i builder image.
+
+
+.SH USAGE
+.PP
+This is image can be run both with standalone s2i tool, or in Openshift.
+
+.PP
+To build your application with s2i, run:
+
+.PP
+.RS
+
+.nf
+# s2i <SOURCE\_GIT\_REPOSITORY> modularitycontainers/ruby\-24 <APP\_NAME> 
+
+.fi
+.RE
+
+.PP
+To run the resulting container with your application, run:
+
+.PP
+.RS
+
+.nf
+# docker run \-p 8080:8080 <APP\_NAME>
+
+.fi
+.RE
+
+.PP
+To run this image in Openshift, please obtain template from 
+\[la]https://github.com/container-images/ruby\[ra] and then run:
+
+.PP
+.RS
+
+.nf
+# oc new\-project <PROJECT\_NAME>
+# oc new\-app <TEMPLATE\_FILE> modularitycontainers/ruby\-24 <APP\_NAME> 
+
+.fi
+.RE
+
+
+.SH ENVIRONMENT VARIABLES
+.PP
+RACK\_ENV
+    This variable specifies the environment where the Ruby application will be deployed (unless overwritten) \- \fB\fCproduction\fR, \fB\fCdevelopment\fR, \fB\fCtest\fR\&.
+    Each level has different behaviors in terms of logging verbosity, error pages, ruby gem installation, etc.
+    Note: Application assets will be compiled only if the \fB\fCRACK\_ENV\fR is set to \fB\fCproduction\fR
+
+.PP
+DISABLE\_ASSET\_COMPILATION
+    This variable set to \fB\fCtrue\fR indicates that the asset compilation process will be skipped. Since this only takes place
+    when the application is run in the \fB\fCproduction\fR environment, it should only be used when assets are already compiled.
+
+.PP
+PUMA\_MIN\_THREADS, PUMA\_MAX\_THREADS
+    These variables indicate the minimum and maximum threads that will be available in Puma
+\[la]https://github.com/puma/puma\[ra]\&'s thread pool.
+
+.PP
+PUMA\_WORKERS
+    This variable indicate the number of worker processes that will be launched. See documentation on Puma's clustered mode
+\[la]https://github.com/puma/puma#clustered-mode\[ra]\&.
+
+.PP
+RUBYGEM\_MIRROR
+    Set this variable to use a custom RubyGems mirror URL to download required gem packages during build process.
+
+.PP
+RAILS\_ENV
+    Set this variable to \fB\fCdevelopment\fR to enable hot deploy for Ruby on Rails applications. For other types of applications, please refer to Github repository
+\[la]https://github.com/container-images/ruby\[ra]
+
+
+.SH SECURITY IMPLICATIONS
+.PP
+\-p 8080:8080
+    Opens container port 8080 and maps it to the same port on the Host to display Puma frontend
+
+.PP
+\-\-memory=300m
+    Can be used to limit memory that application uses (mainly puma)
+
+.PP
+\-\-cpuset\-cpus='0\-2,3,5'
+    Can be used to select which CPU cores can application use
+
+
+.SH HISTORY
+.PP
+Similar to a Changelog of sorts which can be as detailed as the maintainer wishes.
+
+
+.SH SEE ALSO
+.PP
+A github repository with source of this image: 
+\[la]https://github.com/container-images/ruby\[ra]

@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: Template
+metadata:
+  labels:
+    description: >
+      Ruby 2.4 available as docker container is a base platform for 
+      building and running various Ruby 2.4 applications and frameworks. 
+      Ruby is the interpreted scripting language for quick and easy object-oriented programming. 
+      It has many features to process text files and to do system management tasks (as in Perl). 
+      It is simple, straight-forward, and extensible.
+    tags: builder,ruby,ruby24
+    template: ruby-fedora
+    iconClass: icon-docker
+  name: ruby
+objects:
+  - kind : ImageStream
+    apiVersion : v1
+    metadata :
+        name : ${APP_NAME}
+        labels :
+          appid : ruby-s2i-${APP_NAME}
+  - kind : ImageStream
+    apiVersion : v1
+    metadata :
+      name : ${APP_NAME}-s2i
+      labels :
+        appid : ruby-s2i-${APP_NAME}
+    spec:
+      tags:
+      - name: latest
+        from: 
+          kind: DockerImage
+          name: koscicz/ruby 
+  - kind : BuildConfig
+    apiVersion : v1
+    metadata :
+      name : ${APP_NAME}
+      labels :
+        appid : ruby-s2i-${APP_NAME}
+    spec :
+      triggers :
+        - type : ConfigChange
+        - type : ImageChange
+        - type : GitHub
+          github:
+            secret: secret42
+      source :
+        type : Git
+        git :
+          uri : ${SOURCE_REPOSITORY}
+          contextDir : ${CONTEXT_DIR}
+      strategy :
+        type : Source
+        sourceStrategy :
+          from :
+            kind : ImageStreamTag
+            name : ${APP_NAME}-s2i:latest
+      output :
+        to :
+          kind : ImageStreamTag
+          name : ${APP_NAME}:latest
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${APP_NAME}
+      labels :
+        appid : ruby-s2i-${APP_NAME}
+    spec:
+      strategy:
+        type: Rolling
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - ${APP_NAME}
+          from:
+            kind: ImageStreamTag
+            name: ${APP_NAME}:latest
+      replicas: 1
+      selector :
+        deploymentconfig : ${APP_NAME}
+      template:
+        metadata :
+          labels :
+            appid: ruby-s2i-${APP_NAME}
+            deploymentconfig : ${APP_NAME}
+        spec:
+          containers:
+          - env:
+            - name: RUBY_VERSION
+              value: '2.4'
+            name : ${APP_NAME}
+            image : ${APP_NAME}:latest
+            ports:
+            - containerPort: 8080
+  - kind : Service
+    apiVersion : v1
+    metadata :
+      name : ${APP_NAME}
+      labels :
+        appid : ruby-s2i-${APP_NAME}
+    spec :
+      ports :
+        - name: 8080-tcp
+          protocol : TCP
+          port : 8080
+          targetPort : 8080
+      selector :
+        deploymentconfig : ${APP_NAME}
+  - kind : Route
+    apiVersion : v1
+    metadata :
+      name : ${APP_NAME}
+      labels :
+        appid : ruby-s2i-${APP_NAME}
+    spec :
+      host :
+      to :
+        kind : Service
+        name : ${APP_NAME}
+        weight : 100
+      port :
+        targetPort : 8080-tcp
+parameters :
+  - name : APP_NAME
+    description : Name of application
+    value :
+    required : true
+  - name : SOURCE_REPOSITORY
+    description : Git source repository
+    value :
+    required : true
+  - name : CONTEXT_DIR
+    description : Git context directory
+    value :
+    required : false
