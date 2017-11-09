@@ -189,3 +189,14 @@ $ oc new-app ruby-fedora -p APP_NAME=my-app -p SOURCE_REPOSITORY=https://github.
 Check if everything is ok
 ```
 $ oc logs -f bc/my-app
+
+
+# Testing
+
+There are two test suites included in this repository. One using MTF and the other uses conu.
+
+To run the conu based test suite, you need to follow these steps:
+
+ 1. [Install conu](http://conu.readthedocs.io/en/latest/installation.html).
+ 2. `sudo dnf install -y python3-pytest`
+ 3. `make check`
